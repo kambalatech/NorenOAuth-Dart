@@ -7,14 +7,6 @@ class NorenApiProvider {
   final String apiNotOk = 'Not_Ok';
   final String loginUrl = 'GenAcsTok';
   final String lmts = 'Limits';
-  final String getOtp = 'FgtPwdOTP';
-  final String getscripInfo = 'GetSecurityInfo';
-  final String getMobInvtrsUrl = 'GetMobInvtrs';
-  final String searchUrl = 'SearchScrip';
-  final String addMultiScripsToMW = 'AddMultiScripsToMW';
-  final String getOTPSMsg = 'OTP generation success';
-  final String setpin = "SetPin";
-  final String getLinkedScrips = "GetLinkedScrips";
 
   NorenApiProvider({required String baseUrl}) {
     final options = BaseOptions(
@@ -32,15 +24,6 @@ class NorenApiProvider {
               return handler.next(options);
             },
         onResponse: (Response response, ResponseInterceptorHandler handler) {
-          if (response.data['ReqStatus'] != null) {
-            if (response.data['ReqStatus'] == getOTPSMsg) {
-              response.data['stat'] = apiOk;
-              response.data['smsg'] = getOTPSMsg;
-            } else {
-              response.data['stat'] = apiNotOk;
-              response.data['emsg'] = response.data['ReqStatus'];
-            }
-          }
           return handler.next(response);
         },
         onError: (DioException error, ErrorInterceptorHandler handler) async {

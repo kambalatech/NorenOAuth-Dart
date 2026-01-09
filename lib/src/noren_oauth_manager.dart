@@ -12,7 +12,7 @@ class NorenOauthManager {
   late final NorenConstants _constants;
   late final NorenApiProvider _provider;
   GenAcsTknResp? _token;
-  final TokenStorage? storage;
+  TokenStorage? _storage;
 
   /// Manages OAuth authentication and access token lifecycle for Noren APIs.
   ///
@@ -31,15 +31,21 @@ class NorenOauthManager {
   /// to persist access tokens securely.
   ///
   /// If [storage] is not provided, tokens are stored in memory only.
-  NorenOauthManager({required Object config, this.storage}) {
+  NorenOauthManager({required Object config, TokenStorage? storage}) {
     _constants = NorenConstants(config);
     _provider = NorenApiProvider(baseUrl: _constants.apiURL);
+    _storage = storage;
   }
 
+  /// Generates a new access token using the authorization code.
+  ///
+  /// On success:
+  /// - Updates the in-memory token
+  /// - Persists the token if storage is configured
   Future<dynamic> genAcsTkn({required String code}) async {
     _token = null;
-    if (storage != null) {
-      await storage!.clear();
+    if (_storage != null) {
+      await _storage!.clear();
     }
     String param = "${_constants.clientId}${_constants.secretCode}$code";
     String checksum = "${sha256.convert(utf8.encode(param))}";
@@ -50,16 +56,17 @@ class NorenOauthManager {
     }, null);
     if (resp['access_token'] != null) {
       _token = .fromJson(resp);
-      if (storage != null) {
+      if (_storage != null) {
         final aes = AESGCM();
-        storage!.save(aes.encrypt(jsonEncode(_token!.toJson())));
+        _storage!.save(aes.encrypt(jsonEncode(_token!.toJson())));
       }
     }
     return resp;
   }
 
+  /// On success returns user fund details
   Future<dynamic> getLimits() async {
-    var msg = await validate();
+    var msg = await _validate();
     if (msg != '') {
       return {'stat': _provider.apiNotOk, 'emsg': msg};
     }
@@ -71,10 +78,10 @@ class NorenOauthManager {
     return resp;
   }
 
-  Future<String> validate() async {
+  Future<String> _validate() async {
     if (_token == null) {
-      if (storage != null) {
-        final data = await storage!.load();
+      if (_storage != null) {
+        final data = await _storage!.load();
         if (data != null) {
           final aes = AESGCM();
           _token = GenAcsTknResp.fromJson(jsonDecode(aes.decrypt(data)));

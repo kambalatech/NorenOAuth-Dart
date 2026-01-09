@@ -4,6 +4,10 @@ Noren OAuth Manager
 
 A lightweight, secure, and platform-agnostic Noren OAuth manager for Dart and Flutter with pluggable storage and production-ready design.
 
+## Example
+
+Checkout our [`FlutterOAuthSample-APP`](https://github.com/kambalatech/FlutterOAuthSample-APP) for easy understanding.
+
 ## Getting started
 
 To use this plugin, add `noren_oauth_wrapper` as a dependency in your `pubspec.yaml` file.
@@ -72,5 +76,7 @@ class FlutterTokenStorage implements TokenStorage {
   }
 }
 ```
-The optional storage parameter allows the application to persist access tokens securely. If [storage] is not provided, tokens are stored in memory only
+The optional storage parameter allows the application to persist access tokens securely. If storage is not provided, tokens are stored in memory only
+
+
 
