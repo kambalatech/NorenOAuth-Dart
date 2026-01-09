@@ -1,60 +1,91 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 
+import 'services/aes_gcm.dart';
 import 'services/api_provider.dart';
 import 'noren_oauth_constants.dart';
+import 'services/gen_acs_tkn_model.dart';
+import 'services/token_storage.dart';
 
 class NorenOauthManager {
-  late final NorenConstants constants;
-  late final NorenApiProvider provider;
-  var genAcsTknResp = {};
+  late final NorenConstants _constants;
+  late final NorenApiProvider _provider;
+  GenAcsTknResp? _token;
+  final TokenStorage? storage;
 
-  NorenOauthManager() {
-    final file = File('noren_oauth_config.json');
-
-    if (!file.existsSync()) {
-      throw Exception('configuration file not found');
-    }
-    constants = NorenConstants(jsonDecode(file.readAsStringSync()));
-    provider = NorenApiProvider(baseUrl: constants.apiURL);
+  /// Manages OAuth authentication and access token lifecycle for Noren APIs.
+  ///
+  /// `NorenOauthManager` is responsible for:
+  /// - Handling OAuth token generation
+  /// - Managing access token state
+  /// - Optionally persisting tokens using injected storage
+  /// - Securely call Noren APIs while maintaining sessions
+  ///
+  /// The [config] parameter must contain:
+  /// - `apiURL` – Base URL of the OAuth server
+  /// - `clientId` – OAuth client identifier
+  /// - `secretCode` – Client secret code
+  ///
+  /// The optional [storage] parameter allows the application
+  /// to persist access tokens securely.
+  ///
+  /// If [storage] is not provided, tokens are stored in memory only.
+  NorenOauthManager({required Object config, this.storage}) {
+    _constants = NorenConstants(config);
+    _provider = NorenApiProvider(baseUrl: _constants.apiURL);
   }
 
   Future<dynamic> genAcsTkn({required String code}) async {
-    genAcsTknResp = {};
-    String param = "${constants.clientId}${constants.secretCode}$code";
+    _token = null;
+    if (storage != null) {
+      await storage!.clear();
+    }
+    String param = "${_constants.clientId}${_constants.secretCode}$code";
     String checksum = "${sha256.convert(utf8.encode(param))}";
 
-    final resp = await provider.post(provider.loginUrl, {
+    final resp = await _provider.post(_provider.loginUrl, {
       'code': code,
       'checksum': checksum,
     }, null);
     if (resp['access_token'] != null) {
-      genAcsTknResp = resp;
+      _token = .fromJson(resp);
+      if (storage != null) {
+        final aes = AESGCM();
+        storage!.save(aes.encrypt(jsonEncode(_token!.toJson())));
+      }
     }
     return resp;
   }
 
   Future<dynamic> getLimits() async {
-    var msg = validate();
+    var msg = await validate();
     if (msg != '') {
-      return {'stat': provider.apiNotOk, 'emsg': msg};
+      return {'stat': _provider.apiNotOk, 'emsg': msg};
     }
-    final resp = await provider.post(provider.lmts, {
-      'uid': genAcsTknResp['uid'],
-      'actid': genAcsTknResp['actid'],
-    }, genAcsTknResp['access_token']);
+    final resp = await _provider.post(_provider.lmts, {
+      'uid': _token!.uid,
+      'actid': _token!.actid,
+    }, _token!.accessToken);
 
     return resp;
   }
 
-  String validate() {
-    if (genAcsTknResp['access_token'] == null) {
+  Future<String> validate() async {
+    if (_token == null) {
+      if (storage != null) {
+        final data = await storage!.load();
+        if (data != null) {
+          final aes = AESGCM();
+          _token = GenAcsTknResp.fromJson(jsonDecode(aes.decrypt(data)));
+        }
+      }
+    }
+    if (_token!.accessToken == '') {
       return 'Access Token Not Found';
-    } else if (genAcsTknResp['uid'] == null) {
+    } else if (_token!.uid == '') {
       return 'User id Not Found';
-    } else if (genAcsTknResp['actid'] == null) {
+    } else if (_token!.actid == '') {
       return 'Account id Not Found';
     }
     return '';

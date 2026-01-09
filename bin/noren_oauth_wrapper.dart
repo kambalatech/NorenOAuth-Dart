@@ -1,10 +1,17 @@
 import 'package:noren_oauth_wrapper/noren_oauth_wrapper.dart';
 
 void main() async {
-  var oauthManager = NorenOauthManager();
+  var oauthManager = NorenOauthManager(
+    config: {
+      "apiURL": "https://rama.kambala.co.in/NorenWClientWeb/",
+      "secretCode":
+          "iqpr4dqb5A3ZyRbsZ2JScsLJVuDeSglUfFqomyrEWf1tluH43SCDTihC3oJiGTb9",
+      "clientId": "TESTINV1_U",
+    },
+  );
 
   final resp = await oauthManager.genAcsTkn(
-    code: 'd5c79e54-e2d7-4502-960b-d0f676a7d7e8',
+    code: '877a8c83-771c-43bc-a436-891f496acda3',
   );
 
   print(resp);

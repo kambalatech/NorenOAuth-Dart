@@ -2,24 +2,39 @@ Noren OAuth Manager
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+A lightweight, secure, and platform-agnostic Noren OAuth manager for Dart and Flutter with pluggable storage and production-ready design.
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
+To use this plugin, add `noren_oauth_wrapper` as a dependency in your `pubspec.yaml` file
 start using the package.
+
+### Add JSON Config File to Assets
+ 
+Add configuration file to the path `assets/config/noren_oauth_config.json`
+
+```json
+{
+  "apiURL": "https://api.example.url",
+  "clientId": "YOUR_CLIENT_ID",
+  "secretCode": "YOUR_SECRET_CODE"
+}
+```
+#### Register Asset in pubspec.yaml
+
+```yaml
+flutter:
+  assets:
+    - assets/config/noren_oauth_config.json
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
+Import `noren_oauth_wrapper.dart`:
 
 ```dart
-const like = 'sample';
+import 'package:noren_oauth_wrapper/noren_oauth_wrapper.dart';
 ```
+Before you can use this plugin, you need to initialize it by passing loaded `noren_oauth_config.json` 
 
-## Additional information
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
