@@ -3,10 +3,9 @@ import 'package:noren_oauth_wrapper/noren_oauth_wrapper.dart';
 void main() async {
   var oauthManager = NorenOauthManager(
     config: {
-      "apiURL": "https://rama.kambala.co.in/NorenWClientWeb/",
-      "secretCode":
-          "iqpr4dqb5A3ZyRbsZ2JScsLJVuDeSglUfFqomyrEWf1tluH43SCDTihC3oJiGTb9",
-      "clientId": "TESTINV1_U",
+      "apiURL": "https://<broker_api_url>/",
+      "secretCode": "<secret_code>",
+      "clientId": "<client_id>",
     },
   );
 
